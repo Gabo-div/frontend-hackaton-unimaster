@@ -7,14 +7,13 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
 const singUpInputsSchema = z.object({
-  name: z.string().min(1).max(50),
   email: z.string().min(1).email(),
   password: z.string().min(1).max(20),
 });
 
 type SingUpInputs = z.infer<typeof singUpInputsSchema>;
 
-export default function Register() {
+export default function Login() {
   const {
     register,
     handleSubmit,
@@ -31,22 +30,9 @@ export default function Register() {
   return (
     <main className="bg-yellow-300  h-screen w-screen flex justify-center items-center">
       <div className="w-[500px] drop-shadow-2xl bg-white rounded-md p-12 border border-gray-300">
-        <h1 className="font-medium text-3xl text-center">¡Bienvenido a UniMaster!</h1>
-        <div className="mt-4 text-sm text-gray-600">
-          Crea tu cuenta para empezar a organizar rápidamente tu vida universitaria
-        </div>
+        <h1 className="font-medium text-3xl text-center">¡Bienvenido de vuelta!</h1>
+        <div className="mt-4 text-sm text-gray-600 text-center">Inicia sesión y encontrarás todo como lo dejaste</div>
         <form autoComplete="off" onSubmit={handleSubmit(onSubmit)} className="space-y-2 mt-6">
-          <TextField
-            label="Nombre"
-            name="name"
-            register={register}
-            required={true}
-            errors={errors}
-            errorMessage={
-              getValues().name == "" ? "Ingrese un nombre." : "El nombre no puede ser mayor a 50 caracteres."
-            }
-          />
-
           <TextField
             type="email"
             label="Email"
@@ -71,12 +57,12 @@ export default function Register() {
             }
           />
 
-          <button className="w-full bg-yellow-300 p-3 rounded-full">Registrase</button>
+          <button className="w-full bg-yellow-300 p-3 rounded-full">Iniciar Sesión</button>
         </form>
         <div className="mt-8 text-center">
-          ¿Ya tienes una cuenta?{" "}
-          <Link href="/login" className="text-blue-500">
-            inicia sesión
+          ¿No tienes una cuenta?{" "}
+          <Link href="/" className="text-blue-500">
+            registrate
           </Link>
         </div>
       </div>
