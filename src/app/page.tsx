@@ -1,20 +1,20 @@
 "use client";
 
 import TextField from "@/components/TextField";
+import { apiURL } from "@/dependencies";
+import { SingUpInputs, singUpInputsSchema } from "@/types/SingUp";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-
-const singUpInputsSchema = z.object({
-  name: z.string().min(1).max(50),
-  email: z.string().min(1).email(),
-  password: z.string().min(1).max(20),
-});
-
-type SingUpInputs = z.infer<typeof singUpInputsSchema>;
+import { toast } from "react-toastify";
 
 export default function Register() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -24,14 +24,46 @@ export default function Register() {
     resolver: zodResolver(singUpInputsSchema),
   });
 
-  const onSubmit: SubmitHandler<SingUpInputs> = (inputs) => {
-    console.log(inputs);
+  const mutation = useMutation({
+    mutationFn: async (inputs: SingUpInputs) => {
+      const res = await fetch(`${apiURL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      });
+      const data = await res.json();
+
+      return z
+        .object({
+          id: z.number(),
+          name: z.string(),
+          email: z.string().email(),
+        })
+        .parse(data.data.user);
+    },
+    onSuccess: (res) => {
+      toast.success("¡Usuario registrado con exito!");
+      router.push("/login");
+    },
+    onError: () => {
+      toast.error("Parece que el email ya existe");
+    },
+  });
+
+  const onSubmit: SubmitHandler<SingUpInputs> = (inputs, e) => {
+    e?.preventDefault();
+    mutation.mutate(inputs);
   };
 
   return (
     <main className="bg-yellow-300  h-screen w-screen flex justify-center items-center">
-      <div className="w-[500px] drop-shadow-2xl bg-white rounded-md p-12 border border-gray-300">
-        <h1 className="font-medium text-3xl text-center">¡Bienvenido a UniMaster!</h1>
+      <div className="w-[500px] drop-shadow-2xl bg-white rounded-xl p-12 border border-gray-300">
+        <div className="flex justify-center">
+          <Image alt="logo" src="/logo.png" width={200} height={200} />
+        </div>
+        <h3 className="font-medium text-3xl text-center">¡Bienvenido a UniMaster!</h3>
         <div className="mt-4 text-sm text-gray-600">
           Crea tu cuenta para empezar a organizar rápidamente tu vida universitaria
         </div>
@@ -67,7 +99,7 @@ export default function Register() {
             errorMessage={
               getValues().password == ""
                 ? "Ingrese una contraseña."
-                : "La contraseña no puede ser mayor a 20 caracteres."
+                : "La contraseña debe estar entre 8 y 20 caracteres."
             }
           />
 

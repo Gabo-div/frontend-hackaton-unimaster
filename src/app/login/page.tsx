@@ -5,6 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { apiURL } from "@/dependencies";
+import { toast } from "react-toastify";
 
 const singUpInputsSchema = z.object({
   email: z.string().min(1).email(),
@@ -14,6 +18,8 @@ const singUpInputsSchema = z.object({
 type SingUpInputs = z.infer<typeof singUpInputsSchema>;
 
 export default function Login() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -23,8 +29,30 @@ export default function Login() {
     resolver: zodResolver(singUpInputsSchema),
   });
 
+  const mutation = useMutation({
+    mutationFn: async (inputs: SingUpInputs) => {
+      const res = await fetch(`${apiURL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(inputs),
+      });
+      const data = await res.json();
+
+      return z.string().parse(data.data.token);
+    },
+    onSuccess: (res) => {
+      window.localStorage.setItem("token", res);
+      router.push("/dashboard");
+    },
+    onError: () => {
+      toast.error("Ocurrió un error");
+    },
+  });
+
   const onSubmit: SubmitHandler<SingUpInputs> = (inputs) => {
-    console.log(inputs);
+    mutation.mutate(inputs);
   };
 
   return (
