@@ -12,16 +12,19 @@ import useDashboard from "@/hooks/useDashboard";
 type Props = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  semesterId?: number;
 };
 
-const newSemesterSchema = z.object({
+const newSubjectSchema = z.object({
   name: z.string().min(1).max(20),
+  teacher: z.string().min(1).max(20),
+  uc: z.string().transform((s) => parseInt(s)),
 });
 
-type NewSemesterInput = z.infer<typeof newSemesterSchema>;
+type NewSubjectInput = z.infer<typeof newSubjectSchema>;
 
-const AddSemesterModal = ({ open, setOpen }: Props) => {
-  const { createSemester } = useDashboard();
+const AddSubjectModal = ({ open, setOpen, semesterId }: Props) => {
+  const { createSubject } = useDashboard();
 
   const {
     register,
@@ -29,13 +32,18 @@ const AddSemesterModal = ({ open, setOpen }: Props) => {
     formState: { errors },
     getValues,
     reset,
-  } = useForm<NewSemesterInput>({
-    resolver: zodResolver(newSemesterSchema),
+  } = useForm<NewSubjectInput>({
+    resolver: zodResolver(newSubjectSchema),
   });
 
-  const onSubmit: SubmitHandler<NewSemesterInput> = (values, e) => {
+  const onSubmit: SubmitHandler<NewSubjectInput> = (values, e) => {
+    if (!semesterId) return;
+
     e?.preventDefault();
-    createSemester(values.name);
+    createSubject({
+      ...values,
+      semesterId,
+    });
     closeModal();
   };
 
@@ -46,7 +54,7 @@ const AddSemesterModal = ({ open, setOpen }: Props) => {
 
   return (
     <>
-      {open ? (
+      {open && semesterId ? (
         <>
           <div className="bg-black/30 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
             <div className="relative w-[600px] my-6 mx-auto">
@@ -56,7 +64,7 @@ const AddSemesterModal = ({ open, setOpen }: Props) => {
                 className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none"
               >
                 <div className="flex items-start justify-between p-5 border-b border-solid border-gray-100 rounded-t ">
-                  <h3 className="text-2xl font=semibold">Agregar Semestre</h3>
+                  <h3 className="text-2xl font=semibold">Agregar Materia</h3>
                   <button
                     className="bg-slate-200/70 h-8 w-8 border-0 ml-auto flex items-center justify-center rounded-full"
                     onClick={() => closeModal()}
@@ -73,9 +81,30 @@ const AddSemesterModal = ({ open, setOpen }: Props) => {
                     errors={errors}
                     errorMessage={
                       getValues().name == ""
-                        ? "Ingrese un nombre para el semestre."
+                        ? "Ingrese un nombre para la materia."
                         : "El nombre debe tener un maximo de 20 caracteres."
                     }
+                  />
+                  <TextField
+                    label="Profesor"
+                    name="teacher"
+                    register={register}
+                    required={true}
+                    errors={errors}
+                    errorMessage={
+                      getValues().teacher == ""
+                        ? "Ingrese un profesor para la materia."
+                        : "El profesor debe tener un maximo de 20 caracteres."
+                    }
+                  />
+                  <TextField
+                    type="number"
+                    label="Unidades Curriculares"
+                    name="uc"
+                    register={register}
+                    required={true}
+                    errors={errors}
+                    errorMessage={"Ingrese unas UC para el semestre."}
                   />
                 </div>
                 <div className="flex items-center justify-end p-2 border-t border-solid border-gray-100 rounded-b">
@@ -102,4 +131,4 @@ const AddSemesterModal = ({ open, setOpen }: Props) => {
   );
 };
 
-export default AddSemesterModal;
+export default AddSubjectModal;
